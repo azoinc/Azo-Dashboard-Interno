@@ -5,8 +5,28 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { z } from 'zod';
 
+// Allowlist de prefixos de path permitidos para o proxy Sienge.
+// Bloqueia SSRF: impede que o proxy seja usado para acessar endpoints arbitrários.
+const ALLOWED_PATH_PREFIXES = [
+  '/sales',
+  '/marketing-costs',
+  '/developments',
+  '/stock',
+  '/receivables',
+  '/customers',
+  '/units',
+  '/proposals',
+] as const;
+
 const querySchema = z.object({
-  path: z.string().min(1).startsWith('/'),
+  path: z
+    .string()
+    .min(1)
+    .startsWith('/')
+    .refine(
+      (p) => ALLOWED_PATH_PREFIXES.some((prefix) => p.startsWith(prefix)),
+      { message: `Path not in allowlist. Permitted prefixes: ${ALLOWED_PATH_PREFIXES.join(', ')}` }
+    ),
 });
 
 const SIENGE_BASE_URL = 'https://api.sienge.com.br';

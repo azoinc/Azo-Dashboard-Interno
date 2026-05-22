@@ -55,22 +55,30 @@ export function rateLimit(
   };
 }
 
-// Helper to get client identifier from request
+// Helper to get client identifier from request.
+// Ordem de confiança:
+//   1. cf-connecting-ip  — definido pela Cloudflare, não pode ser falsificado pelo cliente
+//   2. x-real-ip         — definido pelo nginx/proxy reverso confiável
+//   3. x-forwarded-for   — ÚLTIMO recurso: facilmente forjado por clientes; usamos apenas
+//                          o ÚLTIMO IP da cadeia (o mais próximo do proxy de borda real)
+// Em produção sem proxy reverso, nenhum desses headers estará presente → 'unknown'.
+// Não incluímos user-agent no identificador para evitar que clientes mudem de UA para burlar o limite.
 export function getClientIdentifier(request: Request): string {
-  // Try to get IP from various headers
-  const forwarded = request.headers.get('x-forwarded-for');
+  const cfIp = request.headers.get('cf-connecting-ip');
+  if (cfIp) return cfIp.trim();
+
   const realIp = request.headers.get('x-real-ip');
-  const cfConnectingIp = request.headers.get('cf-connecting-ip');
-  
-  const ip = forwarded?.split(',')[0]?.trim() || 
-             realIp || 
-             cfConnectingIp || 
-             'unknown';
-  
-  // Add user agent to differentiate different browsers from same IP
-  const userAgent = request.headers.get('user-agent') || 'unknown';
-  
-  return `${ip}-${userAgent}`;
+  if (realIp) return realIp.trim();
+
+  // x-forwarded-for pode ter múltiplos IPs: "client, proxy1, proxy2"
+  // Usar o ÚLTIMO da lista reduz risco de IP spoofing via header forjado pelo cliente
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const parts = forwarded.split(',');
+    return parts[parts.length - 1].trim();
+  }
+
+  return 'unknown';
 }
 
 // Clean up old entries periodically (call this from a cron job or similar)

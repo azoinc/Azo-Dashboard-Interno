@@ -32,7 +32,21 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co;"
+            // unsafe-eval removido (era desnecessário — Next.js não precisa em produção)
+            // unsafe-inline mantido apenas em style-src (necessário para Tailwind/CSS-in-JS)
+            // script-src: nonces são preferíveis em produção, mas requerem middleware
+            // connect-src: restringe domínios de API ao mínimo necessário
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: https:",
+              "font-src 'self' data:",
+              "connect-src 'self' https://aws-1-sa-east-1.pooler.supabase.com https://*.googleapis.com https://*.firebaseio.com https://*.firebase.com",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join('; ')
           }
         ],
       },

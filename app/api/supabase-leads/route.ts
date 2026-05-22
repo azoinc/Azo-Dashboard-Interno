@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { querySupabase } from '@/lib/supabase-server';
 import { z } from 'zod';
 import { rateLimit, getClientIdentifier } from '@/lib/rate-limit';
-import type { Lead, LeadMilestone } from '@/lib/types';
+import type { Lead, LeadMilestoneEvent } from '@/lib/types';
 
 const querySchema = z.object({
   empreendimento: z.string().optional().default('all'),
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
     const leads = leadsRes.rows as Lead[];
 
     // ── Query lead_milestones (opcional) ────────────────────────────────────
-    let lead_milestones: LeadMilestone[] | undefined;
+    let lead_milestones: LeadMilestoneEvent[] | undefined;
     let totalMilestones: number | undefined;
 
     if (include_milestones) {
@@ -113,11 +113,11 @@ export async function GET(request: NextRequest) {
       }
       if (data_inicio) {
         mParams.push(data_inicio);
-        mConds.push(`evento_data >= $${mParams.length}`);
+        mConds.push(`lead_data_cad >= $${mParams.length}`);
       }
       if (data_fim) {
         mParams.push(data_fim);
-        mConds.push(`evento_data <= $${mParams.length}`);
+        mConds.push(`lead_data_cad <= $${mParams.length}`);
       }
       const mWhere = mConds.length ? `WHERE ${mConds.join(' AND ')}` : '';
       const mPageParams = [...mParams, limit, offset];
@@ -127,16 +127,17 @@ export async function GET(request: NextRequest) {
       const [mCountRes, mRes] = await Promise.all([
         querySupabase(`SELECT COUNT(*) FROM lead_milestones ${mWhere}`, mParams),
         querySupabase(
-          `SELECT id, lead_id, lead_nome, origem, empreendimento, lead_data_cad,
-                  safra_data, competencia_data, status_final_mes, corretor, evento_data
+          `SELECT id, id_historico_cv, lead_id, lead_nome, empreendimento, origem,
+                  status, de_nome, para_nome, motivo_cancelamento, data_cancelamento,
+                  corretor, lead_data_cad, referencia_data, ativo
            FROM lead_milestones ${mWhere}
-           ORDER BY evento_data DESC
+           ORDER BY referencia_data DESC
            LIMIT $${mLimitIdx} OFFSET $${mOffsetIdx}`,
           mPageParams
         ),
       ]);
 
-      lead_milestones = mRes.rows as LeadMilestone[];
+      lead_milestones = mRes.rows as LeadMilestoneEvent[];
       totalMilestones = parseInt(mCountRes.rows[0].count);
     }
 

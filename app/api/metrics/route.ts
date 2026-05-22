@@ -72,16 +72,14 @@ export async function GET(request: NextRequest) {
 
     const { empreendimento, data_inicio, data_fim, mes_competencia, modo, page, limit } = validatedParams.data;
 
-    // Cláusula SQL de filtro de modo — aplicada em leads.status_atual e lead_milestones.status
-    const modoLeadsCond =
-      modo === 'organico'        ? `AND status_atual NOT ILIKE '%${ACOES_MARKETING_PATTERN}%'` :
-      modo === 'acoes_marketing' ? `AND status_atual ILIKE '%${ACOES_MARKETING_PATTERN}%'`    : '';
-    const modoEventsCond =
-      modo === 'organico'        ? `AND status NOT ILIKE '%${ACOES_MARKETING_PATTERN}%'` :
-      modo === 'acoes_marketing' ? `AND status ILIKE '%${ACOES_MARKETING_PATTERN}%'`    : '';
-    const modoSnapshotCond =
-      modo === 'organico'        ? `AND status_final_mes NOT ILIKE '%${ACOES_MARKETING_PATTERN}%'` :
-      modo === 'acoes_marketing' ? `AND status_final_mes ILIKE '%${ACOES_MARKETING_PATTERN}%'`    : '';
+    // Cláusula SQL de filtro de modo — usa parâmetros posicionais, nunca interpolação de input
+    // Retorna a cláusula AND e o valor a adicionar no array de params (ou null se modo=all)
+    const MARKETING_PARAM = `%${ACOES_MARKETING_PATTERN}%`;
+    const modoClause = (col: string, paramIdx: number): { cond: string; param: string | null } => {
+      if (modo === 'organico')        return { cond: `AND ${col} NOT ILIKE $${paramIdx}`, param: MARKETING_PARAM };
+      if (modo === 'acoes_marketing') return { cond: `AND ${col} ILIKE $${paramIdx}`,     param: MARKETING_PARAM };
+      return { cond: '', param: null };
+    };
 
     // ── Firebase Firestore leads ──────────────────────────────────────────────
     let firebaseLeads: Lead[] = [];
@@ -135,14 +133,26 @@ export async function GET(request: NextRequest) {
       sqlParams.push(offset);
       const offsetIdx = sqlParams.length;
 
+      // Adiciona o parâmetro de modo depois dos filtros base, antes de LIMIT/OFFSET
+      const countParams = sqlParams.slice(0, -2);
+      const mLeads = modoClause('status_atual', countParams.length + 1);
+      if (mLeads.param) countParams.push(mLeads.param);
+
+      const dataParams = [...sqlParams]; // inclui limit e offset
+      const mLeadsData = modoClause('status_atual', dataParams.length - 1); // antes do limit/offset
+      // Reinsere modo antes do limit: [filtros..., modoParam?, limit, offset]
+      if (mLeadsData.param) dataParams.splice(dataParams.length - 2, 0, mLeadsData.param);
+      const newLimitIdx = dataParams.length - 1;
+      const newOffsetIdx = dataParams.length;
+
       const [countRes, dataRes] = await Promise.all([
-        querySupabase(`SELECT COUNT(*) FROM leads ${where} ${modoLeadsCond}`, sqlParams.slice(0, -2)),
+        querySupabase(`SELECT COUNT(*) FROM leads ${where} ${mLeads.cond}`, countParams),
         querySupabase(
           `SELECT id_cv, nome, status_atual, data_criacao_cv, corretor, empreendimento, origem, midia
-           FROM leads ${where} ${modoLeadsCond}
+           FROM leads ${where} ${mLeadsData.cond}
            ORDER BY data_criacao_cv DESC
-           LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
-          sqlParams
+           LIMIT $${newLimitIdx} OFFSET $${newOffsetIdx}`,
+          dataParams
         ),
       ]);
 
@@ -190,10 +200,12 @@ export async function GET(request: NextRequest) {
       }
 
       const eWhere = `WHERE ${eConds.join(' AND ')}`;
+      const mEvents = modoClause('status', eParams.length + 1);
+      if (mEvents.param) eParams.push(mEvents.param);
       const eRes = await querySupabase(
         `SELECT lead_id, lead_nome, empreendimento, origem, status, para_nome,
                 corretor, lead_data_cad, referencia_data, ativo
-         FROM lead_milestones ${eWhere} ${modoEventsCond}
+         FROM lead_milestones ${eWhere} ${mEvents.cond}
          ORDER BY lead_id, referencia_data ASC`,
         eParams
       );
@@ -227,10 +239,12 @@ export async function GET(request: NextRequest) {
       }
 
       const sWhere = sConds.length ? `WHERE ${sConds.join(' AND ')}` : '';
+      const mSnap = modoClause('status_final_mes', sParams.length + 1);
+      if (mSnap.param) sParams.push(mSnap.param);
       const sRes = await querySupabase(
         `SELECT lead_id, lead_nome, origem, empreendimento, lead_data_cad,
                 safra_data, competencia_data, status_final_mes, corretor, evento_data
-         FROM view_lead_snapshot_mensal ${sWhere} ${modoSnapshotCond}
+         FROM view_lead_snapshot_mensal ${sWhere} ${mSnap.cond}
          ORDER BY lead_id, competencia_data ASC`,
         sParams
       );
