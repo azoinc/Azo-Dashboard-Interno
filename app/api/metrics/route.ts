@@ -266,21 +266,29 @@ function computeStatusDistribution(statusList: string[]): StatusDistributionItem
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Lógica 2 – Status MAIS QUENTE já atingido por cada lead
-// Para cada lead_id, escolhe o milestone com maior heat_score
+//
+// A tabela leads_milestones registra um snapshot por mês de competência:
+// cada linha = estado do lead no fechamento daquele mês.
+// Para saber o pico histórico real do lead, varremos TODOS os seus milestones
+// (todos os meses disponíveis) e escolhemos o que tem maior heat score.
+// A query SQL traz todos os meses sem restringir competencia_data, garantindo
+// que avançamentos posteriores ao período de cadastro sejam considerados.
 // ─────────────────────────────────────────────────────────────────────────────
 function computeStatusMaisQuente(milestones: LeadMilestone[]): StatusDistributionItem[] {
-  // Agrupa milestones por lead_id
+  // Agrupa todos os milestones por lead_id (todos os meses)
   const byLead: Record<string, LeadMilestone[]> = {};
   for (const m of milestones) {
     if (!byLead[m.lead_id]) byLead[m.lead_id] = [];
     byLead[m.lead_id].push(m);
   }
 
-  // Para cada lead, pega o milestone com maior score
+  // Para cada lead, percorre todos os seus meses e seleciona o maior score
   const hotStatuses: string[] = [];
   for (const leadMilestones of Object.values(byLead)) {
     const hottest = leadMilestones.reduce((best, m) => {
-      return getHeatScore(m.status_final_mes) > getHeatScore(best.status_final_mes) ? m : best;
+      const scoreM = getHeatScore(m.status_final_mes);
+      const scoreBest = getHeatScore(best.status_final_mes);
+      return scoreM > scoreBest ? m : best;
     });
     hotStatuses.push(hottest.status_final_mes);
   }
