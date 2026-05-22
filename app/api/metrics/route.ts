@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminDb } from '@/lib/firebase-admin';
 import { querySupabase } from '@/lib/supabase-server';
 import { z } from 'zod';
 import { rateLimit, getClientIdentifier } from '@/lib/rate-limit';
@@ -81,29 +80,7 @@ export async function GET(request: NextRequest) {
       return { cond: '', param: null };
     };
 
-    // ── Firebase Firestore leads ──────────────────────────────────────────────
-    let firebaseLeads: Lead[] = [];
-    let firebaseTotal = 0;
-    try {
-      const adminDb = getAdminDb();
-      let baseQuery: FirebaseFirestore.Query = adminDb.collection('leads');
-      if (empreendimento !== 'all') {
-        baseQuery = baseQuery.where('empreendimento', '==', empreendimento);
-      }
-      if (data_inicio && data_fim) {
-        baseQuery = baseQuery
-          .where('data_criacao_cv', '>=', data_inicio)
-          .where('data_criacao_cv', '<=', data_fim);
-      }
-      const [totalSnap, snapshot] = await Promise.all([
-        baseQuery.count().get(),
-        baseQuery.orderBy('data_criacao_cv', 'desc').limit(limit).offset((page - 1) * limit).get(),
-      ]);
-      firebaseTotal = totalSnap.data().count;
-      firebaseLeads = snapshot.docs.map(doc => doc.data() as Lead);
-    } catch (e) {
-      console.warn('Firebase unavailable, skipping:', e);
-    }
+    // Todos os leads estão no Supabase — Firebase Admin não é utilizado
 
     // ── Supabase leads (pg direto) ────────────────────────────────────────────
     let supabaseLeads: Lead[] = [];
@@ -162,18 +139,7 @@ export async function GET(request: NextRequest) {
       console.warn('Supabase unavailable, skipping:', e);
     }
 
-    // ── Merge: deduplica por id_cv se existir nos dois ────────────────────────
-    const seenIds = new Set<string>();
-    const allLeads: Lead[] = [];
-    for (const lead of [...supabaseLeads, ...firebaseLeads]) {
-      const key = lead.id_cv
-        ? String(lead.id_cv)
-        : `${lead.empreendimento}|${lead.data_criacao_cv}|${lead.status_atual}`;
-      if (!seenIds.has(key)) {
-        seenIds.add(key);
-        allLeads.push(lead);
-      }
-    }
+    const allLeads: Lead[] = supabaseLeads;
 
     // ── Supabase: eventos individuais de status (lead_milestones) ──────────────
     // Cada linha = uma transição de status (de_nome → para_nome).
@@ -253,7 +219,7 @@ export async function GET(request: NextRequest) {
       console.warn('view_lead_snapshot_mensal unavailable, skipping:', e);
     }
 
-    const total = firebaseTotal + supabaseTotal;
+    const total = supabaseTotal;
     const metrics = processMetrics(allLeads);
 
     // ── Lógica 1: status ATUAL dos leads (campo status_atual, tabela leads) ───
@@ -282,7 +248,6 @@ export async function GET(request: NextRequest) {
       mes_competencia: mes_competencia ?? null,
       modo,
       sources: {
-        firebase: { total: firebaseTotal },
         supabase: { total: supabaseTotal, events_count: milestoneEvents.length, snapshot_count: snapshotMensal.length },
       },
       pagination: {
