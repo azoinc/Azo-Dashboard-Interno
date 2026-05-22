@@ -1,39 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getAdminDb } from '@/lib/firebase-admin';
+import { z } from 'zod';
+import { rateLimit, getClientIdentifier } from '@/lib/rate-limit';
+
+const investmentQuerySchema = z.object({
+  empreendimento: z.string().optional().default('all'),
+  data_inicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  data_fim: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  page: z.string().transform((val) => parseInt(val || '1')).pipe(z.number().int().positive()).optional().default(1),
+  limit: z.string().transform((val) => parseInt(val || '50')).pipe(z.number().int().positive().max(100)).optional().default(50),
+});
 
 export async function GET(request: NextRequest) {
-  if (!supabase) {
+  // Rate limiting
+  const identifier = getClientIdentifier(request);
+  const rateLimitResult = rateLimit(identifier, 100, 60000); // 100 requests per minute
+  
+  if (!rateLimitResult.success) {
     return NextResponse.json(
-      { error: 'Supabase not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.' },
-      { status: 503 }
+      { error: 'Too many requests' },
+      { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': '100',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+        }
+      }
     );
   }
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const empreendimento = searchParams.get('empreendimento') || 'all';
-    const dataInicio = searchParams.get('data_inicio');
-    const dataFim = searchParams.get('data_fim');
+    const queryParams = Object.fromEntries(searchParams.entries());
+    
+    const validatedParams = investmentQuerySchema.safeParse(queryParams);
+    
+    if (!validatedParams.success) {
+      return NextResponse.json(
+        { error: 'Invalid query parameters', details: validatedParams.error.issues },
+        { status: 400 }
+      );
+    }
 
-    let query = supabase.from('investimento').select('*');
+    const { empreendimento, data_inicio, data_fim, page, limit } = validatedParams.data;
+
+    const adminDb = getAdminDb();
+    let baseQuery: FirebaseFirestore.Query = adminDb.collection('investimento');
 
     if (empreendimento !== 'all') {
-      query = query.eq('empreendimento', empreendimento);
+      baseQuery = baseQuery.where('empreendimento', '==', empreendimento);
+    }
+    if (data_inicio && data_fim) {
+      baseQuery = baseQuery
+        .where('mes_ref', '>=', data_inicio)
+        .where('mes_ref', '<=', data_fim);
     }
 
-    if (dataInicio && dataFim) {
-      query = query.gte('mes_ref', dataInicio).lte('mes_ref', dataFim);
-    }
+    const [totalSnap, snapshot] = await Promise.all([
+      baseQuery.count().get(),
+      baseQuery.orderBy('mes_ref', 'desc').limit(limit).offset((page - 1) * limit).get(),
+    ]);
 
-    const { data, error } = await query;
+    const total = totalSnap.data().count;
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    if (error) throw error;
+    const response = NextResponse.json({
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
 
-    return NextResponse.json(data || []);
+    response.headers.set('X-RateLimit-Limit', '100');
+    response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+    response.headers.set('X-RateLimit-Reset', rateLimitResult.resetTime.toString());
+
+    return response;
   } catch (error) {
     console.error('Error fetching investment:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch investment data' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

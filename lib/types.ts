@@ -63,3 +63,17 @@ export interface DashboardFilters {
     fim: string;
   };
 }
+
+export interface LeadMilestone {
+  id: number;
+  lead_id: string;
+  lead_nome: string;
+  origem: string;
+  empreendimento: string;
+  lead_data_cad: string;
+  safra_data: string;
+  competencia_data: string;
+  status_final_mes: string;
+  corretor: string;
+  evento_data: string;
+}

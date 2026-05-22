@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { HeroSection } from "@/components/dashboard/HeroSection";
 import { KPICards } from "@/components/dashboard/KPICards";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
@@ -8,19 +8,46 @@ import { EmpNav } from "@/components/dashboard/EmpNav";
 import { CalendarFilter } from "@/components/dashboard/CalendarFilter";
 import { EvolutionChart } from "@/components/dashboard/EvolutionChart";
 import { PerformanceTable } from "@/components/dashboard/PerformanceTable";
+import { SiengePanel } from "@/components/dashboard/SiengePanel";
+import { useSiengeIntegration } from "@/hooks/useSiengeIntegration";
+
+interface Metrics {
+  byEmp: Record<string, {
+    leads: number;
+    descartes: number;
+    em_atendimento: number;
+    agendamento: number;
+    visita: number;
+    venda: number;
+  }>;
+  byMonth: Record<string, {
+    leads: number;
+    descartes: number;
+    em_atendimento: number;
+    agendamento: number;
+    visita: number;
+    venda: number;
+  }>;
+  total: {
+    leads: number;
+    descartes: number;
+    em_atendimento: number;
+    agendamento: number;
+    visita: number;
+    venda: number;
+  };
+}
 
 export default function DashboardPage() {
   const [selectedEmp, setSelectedEmp] = useState("all");
   const [period, setPeriod] = useState({ inicio: "", fim: "" });
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [empreendimentos, setEmpreendimentos] = useState<string[]>([]);
 
-  useEffect(() => {
-    fetchMetrics();
-  }, [selectedEmp, period]);
+  const siengeData = useSiengeIntegration(period.inicio, period.fim);
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -40,7 +67,15 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedEmp, period]);
+
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      fetchMetrics();
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [fetchMetrics]);
 
   if (loading) {
     return (
@@ -57,7 +92,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-background text-foreground">
         <div className="container mx-auto p-8">
           <div className="text-center text-muted-foreground">
-            Configure as variáveis de ambiente do Supabase para começar.
+            Configure as variáveis de ambiente do Firebase para começar.
           </div>
         </div>
       </div>
@@ -132,6 +167,21 @@ export default function DashboardPage() {
         <div className="mb-8">
           <PerformanceTable data={performanceData} />
         </div>
+
+        {/* Sienge Integration */}
+        {siengeData.isConfigured && (
+          <div className="mb-8">
+            <SiengePanel
+              vendas={siengeData.vendas}
+              vgv={siengeData.vgv}
+              estoque={siengeData.estoque}
+              vgvEstoque={siengeData.vgvEstoque}
+              custos={siengeData.custos}
+              loading={siengeData.loading}
+              error={siengeData.error}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

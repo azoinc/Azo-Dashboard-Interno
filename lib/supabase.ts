@@ -1,12 +1,2 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-let supabaseClient: ReturnType<typeof createClient> | null = null;
-
-if (typeof window === 'undefined' && supabaseUrl && supabaseAnonKey) {
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-}
-
-export const supabase = supabaseClient;
+// This file is deprecated. Use lib/firebase.ts (client) or lib/firebase-admin.ts (server).
+export { getAdminDb } from './firebase-admin';
