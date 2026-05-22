@@ -82,6 +82,10 @@ export async function GET(request: NextRequest) {
 
     // Todos os leads estão no Supabase — Firebase Admin não é utilizado
 
+    // Data mínima padrão: ignora registros anteriores a 2026-01-01
+    const DATA_MINIMA = '2026-01-01';
+    const data_inicio_efetivo = data_inicio ?? DATA_MINIMA;
+
     // ── Supabase leads (pg direto) ────────────────────────────────────────────
     let supabaseLeads: Lead[] = [];
     let supabaseTotal = 0;
@@ -94,10 +98,8 @@ export async function GET(request: NextRequest) {
         sqlParams.push(empreendimento);
         conditions.push(`empreendimento = $${sqlParams.length}`);
       }
-      if (data_inicio) {
-        sqlParams.push(data_inicio);
-        conditions.push(`data_criacao_cv >= $${sqlParams.length}`);
-      }
+      sqlParams.push(data_inicio_efetivo);
+      conditions.push(`data_criacao_cv >= $${sqlParams.length}`);
       if (data_fim) {
         sqlParams.push(data_fim);
         conditions.push(`data_criacao_cv <= $${sqlParams.length}`);
@@ -156,10 +158,8 @@ export async function GET(request: NextRequest) {
         eParams.push(empreendimento);
         eConds.push(`empreendimento = $${eParams.length}`);
       }
-      if (data_inicio) {
-        eParams.push(data_inicio);
-        eConds.push(`lead_data_cad >= $${eParams.length}`);
-      }
+      eParams.push(data_inicio_efetivo);
+      eConds.push(`lead_data_cad >= $${eParams.length}`);
       if (data_fim) {
         eParams.push(data_fim);
         eConds.push(`lead_data_cad <= $${eParams.length}`);
@@ -191,10 +191,8 @@ export async function GET(request: NextRequest) {
         sParams.push(empreendimento);
         sConds.push(`empreendimento = $${sParams.length}`);
       }
-      if (data_inicio) {
-        sParams.push(data_inicio);
-        sConds.push(`lead_data_cad >= $${sParams.length}`);
-      }
+      sParams.push(data_inicio_efetivo);
+      sConds.push(`lead_data_cad >= $${sParams.length}`);
       if (data_fim) {
         sParams.push(data_fim);
         sConds.push(`lead_data_cad <= $${sParams.length}`);
@@ -246,6 +244,7 @@ export async function GET(request: NextRequest) {
       statusMaisQuente,
       statusNoMes,
       mes_competencia: mes_competencia ?? null,
+      data_inicio_efetivo,
       modo,
       sources: {
         supabase: { total: supabaseTotal, events_count: milestoneEvents.length, snapshot_count: snapshotMensal.length },

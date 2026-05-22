@@ -36,30 +36,62 @@ interface Metrics {
   total: MetricsBucket;
 }
 
+// ── Cache localStorage com TTL ────────────────────────────────────────────────
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+
+function getCached<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { data, expiresAt } = JSON.parse(raw) as { data: T; expiresAt: number };
+    if (Date.now() > expiresAt) { localStorage.removeItem(key); return null; }
+    return data;
+  } catch { return null; }
+}
+
+function setCache<T>(key: string, data: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, expiresAt: Date.now() + CACHE_TTL_MS }));
+  } catch { /* localStorage cheio ou indisponível — ignora silenciosamente */ }
+}
+
 export function DashboardView({ modo, titulo, subtitulo, accentColor = "text-foreground" }: DashboardViewProps) {
   const [selectedEmp, setSelectedEmp] = useState("all");
   const [period, setPeriod] = useState({ inicio: "", fim: "" });
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fromCache, setFromCache] = useState(false);
   const [empreendimentos, setEmpreendimentos] = useState<string[]>([]);
 
   const siengeData = useSiengeIntegration(period.inicio, period.fim);
 
   const fetchMetrics = useCallback(async () => {
+    const params = new URLSearchParams();
+    params.append("modo", modo);
+    if (selectedEmp !== "all") params.append("empreendimento", selectedEmp);
+    if (period.inicio) params.append("data_inicio", period.inicio);
+    if (period.fim) params.append("data_fim", period.fim);
+
+    const cacheKey = `metrics_cache_${params.toString()}`;
+
+    // Tenta servir do cache primeiro
+    const cached = getCached<Metrics>(cacheKey);
+    if (cached) {
+      setMetrics(cached);
+      setEmpreendimentos(Object.keys(cached.byEmp || {}));
+      setFromCache(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const params = new URLSearchParams();
-      params.append("modo", modo);
-      if (selectedEmp !== "all") params.append("empreendimento", selectedEmp);
-      if (period.inicio) params.append("data_inicio", period.inicio);
-      if (period.fim) params.append("data_fim", period.fim);
-
+      setFromCache(false);
       const response = await fetch(`/api/metrics?${params.toString()}`);
       const data = await response.json();
       setMetrics(data);
-
-      const emps = Object.keys(data.byEmp || {});
-      setEmpreendimentos(emps);
+      setEmpreendimentos(Object.keys(data.byEmp || {}));
+      setCache(cacheKey, data);
     } catch (error) {
       console.error("Error fetching metrics:", error);
     } finally {
@@ -102,9 +134,29 @@ export function DashboardView({ modo, titulo, subtitulo, accentColor = "text-for
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto p-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className={`text-4xl font-bold mb-1 ${accentColor}`}>{titulo}</h1>
-          <p className="text-muted-foreground">{subtitulo}</p>
+        <div className="mb-6 flex items-start justify-between flex-wrap gap-2">
+          <div>
+            <h1 className={`text-4xl font-bold mb-1 ${accentColor}`}>{titulo}</h1>
+            <p className="text-muted-foreground">{subtitulo}</p>
+          </div>
+          {fromCache && !loading && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
+              <span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />
+              Cache · atualiza em 5 min
+              <button
+                onClick={() => {
+                  // Limpa todos os caches deste modo e recarrega
+                  Object.keys(localStorage)
+                    .filter(k => k.startsWith(`metrics_cache_modo=${modo}`))
+                    .forEach(k => localStorage.removeItem(k));
+                  fetchMetrics();
+                }}
+                className="ml-1 underline hover:text-foreground transition-colors"
+              >
+                Atualizar
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Tab nav */}
