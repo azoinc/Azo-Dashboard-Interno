@@ -100,8 +100,8 @@ export async function GET(request: NextRequest) {
     const totalLeads = parseInt(countRes.rows[0].count);
     const leads = leadsRes.rows as Lead[];
 
-    // ── Query leads_milestones (opcional) ────────────────────────────────────
-    let leads_milestones: LeadMilestone[] | undefined;
+    // ── Query lead_milestones (opcional) ────────────────────────────────────
+    let lead_milestones: LeadMilestone[] | undefined;
     let totalMilestones: number | undefined;
 
     if (include_milestones) {
@@ -125,24 +125,24 @@ export async function GET(request: NextRequest) {
       const mOffsetIdx = mPageParams.length;       // índice do offset
 
       const [mCountRes, mRes] = await Promise.all([
-        querySupabase(`SELECT COUNT(*) FROM leads_milestones ${mWhere}`, mParams),
+        querySupabase(`SELECT COUNT(*) FROM lead_milestones ${mWhere}`, mParams),
         querySupabase(
           `SELECT id, lead_id, lead_nome, origem, empreendimento, lead_data_cad,
                   safra_data, competencia_data, status_final_mes, corretor, evento_data
-           FROM leads_milestones ${mWhere}
+           FROM lead_milestones ${mWhere}
            ORDER BY evento_data DESC
            LIMIT $${mLimitIdx} OFFSET $${mOffsetIdx}`,
           mPageParams
         ),
       ]);
 
-      leads_milestones = mRes.rows as LeadMilestone[];
+      lead_milestones = mRes.rows as LeadMilestone[];
       totalMilestones = parseInt(mCountRes.rows[0].count);
     }
 
     const response = NextResponse.json({
       leads,
-      leads_milestones,
+      lead_milestones,
       pagination: {
         page,
         limit,
