@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { LayoutGrid, Users } from 'lucide-react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
@@ -33,44 +34,48 @@ export default function DashboardHomePage() {
     );
   }
 
-  // Master of Universe vê os dois botões
+  // Master of Universe vê os dois cards
   return (
-    <div className="max-w-4xl mx-auto px-2 sm:px-0">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="text-center mb-8 sm:mb-12">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 sm:mb-4">
-          Bem-vindo, Master of Universe
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+          Selecione o Dashboard
         </h1>
-        <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">
-          Selecione a área que deseja acessar
+        <p className="text-muted-foreground text-sm sm:text-base">
+          Escolha qual área você deseja acessar
         </p>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-        {/* Botão Financeiro */}
+        {/* Card Comercial / Mkt */}
         <Link
           href="/dashboard/financeiro"
-          className="group bg-card border border-border rounded-xl p-4 sm:p-6 lg:p-8 hover:border-primary hover:shadow-lg transition-all"
+          className="group bg-card border border-border rounded-2xl p-5 sm:p-6 lg:p-8 hover:shadow-lg hover:border-[#8B2356]/30 transition-all"
         >
-          <div className="text-4xl sm:text-5xl lg:text-6xl mb-3 sm:mb-4">💰</div>
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 group-hover:text-primary transition-colors">
-            Financeiro
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-emerald-100 flex items-center justify-center mb-4 sm:mb-5">
+            <LayoutGrid className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600" />
+          </div>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground mb-2 sm:mb-3">
+            Dashboard<br />Comercial / Mkt
           </h2>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Acesso completo aos dados financeiros, lançamentos, comercial e relatórios institucionais
+          <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
+            Acompanhamento de vendas, VGV, leads, visitas e despesas de marketing dos empreendimentos.
           </p>
         </Link>
 
-        {/* Botão Marketing */}
+        {/* Card Interno Mkt */}
         <Link
           href="/dashboard/marketing"
-          className="group bg-card border border-border rounded-xl p-4 sm:p-6 lg:p-8 hover:border-violet-500 hover:shadow-lg transition-all"
+          className="group bg-card border border-border rounded-2xl p-5 sm:p-6 lg:p-8 hover:shadow-lg hover:border-violet-500/30 transition-all"
         >
-          <div className="text-4xl sm:text-5xl lg:text-6xl mb-3 sm:mb-4">📢</div>
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 group-hover:text-violet-500 transition-colors">
-            Marketing
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-violet-100 flex items-center justify-center mb-4 sm:mb-5">
+            <Users className="w-6 h-6 sm:w-7 sm:h-7 text-violet-600" />
+          </div>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground mb-2 sm:mb-3">
+            Interno Mkt
           </h2>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Dashboard de marketing com integração Sienge, leads, investimentos e análises
+          <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
+            Acompanhamento de métricas internas, equipe e processos do departamento de marketing.
           </p>
         </Link>
       </div>
