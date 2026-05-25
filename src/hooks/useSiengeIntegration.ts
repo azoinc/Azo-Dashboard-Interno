@@ -9,12 +9,12 @@ export function useSiengeIntegration(startDate: string, endDate: string) {
     vgvEstoque: 0,
     custos: [],
     loading: false,
-    isConfigured: !!import.meta.env.VITE_SIENGE_SUBDOMAIN
+    isConfigured: true
   });
 
   useEffect(() => {
     async function fetchData() {
-      if (!siengeData.isConfigured || !startDate || !endDate) return;
+      if (!startDate || !endDate) return;
       
       setSiengeData(prev => ({ ...prev, loading: true }));
       

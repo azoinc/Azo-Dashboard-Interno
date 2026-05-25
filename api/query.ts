@@ -14,15 +14,21 @@ const pool = new Pool({
 });
 
 export default async function handler(req: any, res: any) {
-  // Permite apenas requisições POST
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(204).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
     const { table, select, filters, inFilters, limit, order } = req.body;
-    
-    let query = `SELECT ${select || '*'} FROM ${table} WHERE 1=1`;
+
+    let query = `SELECT ${select || '*'} FROM "${table}" WHERE 1=1`;
     const values: any[] = [];
     let paramIndex = 1;
 
@@ -30,17 +36,36 @@ export default async function handler(req: any, res: any) {
       for (const filter of filters) {
         const { column, operator, value } = filter;
         if (operator === 'eq') {
-          query += ` AND "${column}" = $${paramIndex}`;
+          query += ` AND "${column}" = $${paramIndex++}`;
           values.push(value);
-          paramIndex++;
         } else if (operator === 'gte') {
-          query += ` AND "${column}" >= $${paramIndex}`;
+          query += ` AND "${column}" >= $${paramIndex++}`;
           values.push(value);
-          paramIndex++;
         } else if (operator === 'lte') {
-          query += ` AND "${column}" <= $${paramIndex}`;
+          query += ` AND "${column}" <= $${paramIndex++}`;
           values.push(value);
-          paramIndex++;
+        } else if (operator === 'ilike') {
+          query += ` AND "${column}" ILIKE $${paramIndex++}`;
+          values.push(value);
+        } else if (operator === 'or') {
+          // format: "column.ilike.%val%,column2.eq.val2"
+          const parts = String(value).split(',');
+          const orClauses: string[] = [];
+          for (const part of parts) {
+            const segments = part.trim().split('.');
+            if (segments.length < 3) continue;
+            const subCol = segments[0];
+            const subOp = segments[1];
+            const subVal = segments.slice(2).join('.').replace(/^\/|\/$/g, '');
+            if (subOp === 'ilike') {
+              orClauses.push(`"${subCol}" ILIKE $${paramIndex++}`);
+              values.push(subVal);
+            } else if (subOp === 'eq') {
+              orClauses.push(`"${subCol}" = $${paramIndex++}`);
+              values.push(subVal);
+            }
+          }
+          if (orClauses.length > 0) query += ` AND (${orClauses.join(' OR ')})`;
         }
       }
     }
@@ -63,18 +88,13 @@ export default async function handler(req: any, res: any) {
       query += ` ORDER BY "${column}" ${ascending ? 'ASC' : 'DESC'}`;
     }
 
-    if (limit) {
-      query += ` LIMIT $${paramIndex}`;
-      values.push(limit);
-      paramIndex++;
-    } else {
-      query += ` LIMIT 10000`;
-    }
+    query += limit ? ` LIMIT $${paramIndex++}` : ` LIMIT 50000`;
+    if (limit) values.push(limit);
 
     const result = await pool.query(query, values);
     res.status(200).json({ data: result.rows, error: null });
   } catch (error: any) {
-    console.error("Database query error:", error);
+    console.error('Database query error:', error);
     res.status(500).json({ data: null, error: { message: error.message } });
   }
 }
