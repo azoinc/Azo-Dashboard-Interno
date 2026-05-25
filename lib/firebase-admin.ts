@@ -29,7 +29,9 @@ function getAdminApp(): App {
 
 export function getAdminDb(): Firestore {
   if (!adminDb) {
-    adminDb = getFirestore(getAdminApp());
+    // Suporta database customizado (padrão é "(default)")
+    const databaseId = process.env.FIREBASE_DATABASE_ID || '(default)';
+    adminDb = getFirestore(getAdminApp(), databaseId);
   }
   return adminDb;
 }

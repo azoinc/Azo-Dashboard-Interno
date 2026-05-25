@@ -11,44 +11,44 @@ export default function PipelinePage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-2">Pipeline</h1>
-        <p className="text-muted-foreground">Funil de vendas e oportunidades</p>
+        <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">Pipeline</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">Funil de vendas e oportunidades</p>
       </div>
 
-      <div className="flex flex-col gap-4 max-w-2xl">
+      <div className="flex flex-col gap-2 sm:gap-4 max-w-2xl">
         {stages.map((stage, index) => (
-          <div key={stage.name} className="flex items-center gap-4">
-            <div className={`w-4 h-4 rounded-full ${stage.color}`} />
-            <span className="w-24 font-medium">{stage.name}</span>
-            <div className="flex-1 bg-muted rounded-lg overflow-hidden h-12">
+          <div key={stage.name} className="flex items-center gap-2 sm:gap-4">
+            <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full ${stage.color} shrink-0`} />
+            <span className="w-16 sm:w-20 lg:w-24 font-medium text-xs sm:text-sm">{stage.name}</span>
+            <div className="flex-1 bg-muted rounded-lg overflow-hidden h-8 sm:h-10 lg:h-12">
               <div 
-                className={`${stage.color} h-full flex items-center justify-end px-3`}
-                style={{ width: `${(stage.count / stages[0].count) * 100}%`, minWidth: '60px' }}
+                className={`${stage.color} h-full flex items-center justify-end px-2 sm:px-3`}
+                style={{ width: `${(stage.count / stages[0].count) * 100}%`, minWidth: '40px' }}
               >
-                <span className="text-white font-bold">{stage.count}</span>
+                <span className="text-white font-bold text-xs sm:text-sm">{stage.count}</span>
               </div>
             </div>
-            <span className="w-16 text-right text-sm text-muted-foreground">
-              {index > 0 ? `${((stage.count / stages[index - 1].count) * 100).toFixed(1)}%` : '100%'}
+            <span className="w-12 sm:w-14 lg:w-16 text-right text-xs sm:text-sm text-muted-foreground">
+              {index > 0 ? `${((stage.count / stages[index - 1].count) * 100).toFixed(0)}%` : '100%'}
             </span>
           </div>
         ))}
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="bg-card border border-border rounded-lg p-6">
-          <p className="text-sm text-muted-foreground">Taxa de Conversão Geral</p>
-          <p className="text-3xl font-bold mt-2 text-green-600">2,3%</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+        <div className="bg-card border border-border rounded-lg p-3 sm:p-4 lg:p-6">
+          <p className="text-xs sm:text-sm text-muted-foreground">Taxa de Conversão Geral</p>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold mt-1 sm:mt-2 text-green-600">2,3%</p>
         </div>
-        <div className="bg-card border border-border rounded-lg p-6">
-          <p className="text-sm text-muted-foreground">Ticket Médio</p>
-          <p className="text-3xl font-bold mt-2">R$ 850.000</p>
+        <div className="bg-card border border-border rounded-lg p-3 sm:p-4 lg:p-6">
+          <p className="text-xs sm:text-sm text-muted-foreground">Ticket Médio</p>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold mt-1 sm:mt-2">R$ 850.000</p>
         </div>
-        <div className="bg-card border border-border rounded-lg p-6">
-          <p className="text-sm text-muted-foreground">Tempo Médio de Conversão</p>
-          <p className="text-3xl font-bold mt-2">45 dias</p>
+        <div className="bg-card border border-border rounded-lg p-3 sm:p-4 lg:p-6">
+          <p className="text-xs sm:text-sm text-muted-foreground">Tempo Médio de Conversão</p>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold mt-1 sm:mt-2">45 dias</p>
         </div>
       </div>
     </div>

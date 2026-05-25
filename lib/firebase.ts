@@ -31,13 +31,16 @@ try {
   throw error;
 }
 
+// Suporta database customizado (padrão é "(default)")
+const databaseId = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID || '(default)';
+
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = getFirestore(app, databaseId);
 
 // Log para debug (apenas no client)
 if (typeof window !== 'undefined') {
   console.log('Firebase Auth:', auth ? 'OK' : 'FALHOU');
-  console.log('Firebase Firestore:', db ? 'OK' : 'FALHOU');
+  console.log('Firebase Firestore:', db ? 'OK' : 'FALHOU', '- Database:', databaseId);
 }
 
 export default app;
