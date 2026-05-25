@@ -6,7 +6,7 @@ $backend = Join-Path $root "backend"
 
 Write-Host "==> Iniciando backend FastAPI (porta 8000)..." -ForegroundColor Cyan
 $backendJob = Start-Process -FilePath "powershell" `
-    -ArgumentList "-NoExit", "-Command", "cd '$backend'; .\.venv\Scripts\Activate.ps1; uvicorn main:app --reload --port 8000" `
+    -ArgumentList "-NoExit", "-Command", "cd '$backend'; .\.venv\Scripts\uvicorn.exe main:app --reload --port 8000" `
     -PassThru
 
 Start-Sleep -Seconds 2
