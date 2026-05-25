@@ -34,6 +34,14 @@ try {
 // Suporta database customizado (padrão é "(default)")
 const databaseId = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID || '(default)';
 
+// Log qual database está sendo usado (importante para debug)
+if (typeof window !== 'undefined') {
+  console.log('%c[Firebase]', 'color: #ff6b6b; font-weight: bold', 'Database ID:', databaseId);
+  if (databaseId === '(default)') {
+    console.warn('%c[Firebase]', 'color: #ffa500; font-weight: bold', 'Usando database padrão. Para usar database customizado, defina NEXT_PUBLIC_FIREBASE_DATABASE_ID no .env.local');
+  }
+}
+
 export const auth = getAuth(app);
 export const db = getFirestore(app, databaseId);
 
