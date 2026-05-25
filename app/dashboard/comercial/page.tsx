@@ -3,23 +3,49 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   Target, 
-  Warehouse, 
-  TrendingUp, 
-  Home, 
-  Zap,
+  HardHat, 
+  Footprints,
+  ArrowRight,
+  RefreshCw,
+  Download,
+  Plus,
   Settings,
   ChevronDown,
   ChevronRight,
-  Building2,
-  Download,
-  Plus,
-  RefreshCw,
-  Filter
+  Warehouse,
+  TrendingUp,
+  Home,
+  Zap
 } from 'lucide-react';
+import Link from 'next/link';
 
-// Mock data based on the screenshot
+const menuItems = [
+  {
+    href: '/dashboard/comercial/metas',
+    title: 'Metas e Vendas',
+    description: 'Acompanhamento de metas vs realizado por projeto',
+    icon: Target,
+    color: 'bg-emerald-100 text-emerald-600',
+  },
+  {
+    href: '/dashboard/comercial/pipeline',
+    title: 'Pipeline',
+    description: 'Funil de vendas e oportunidades',
+    icon: HardHat,
+    color: 'bg-blue-100 text-blue-600',
+  },
+  {
+    href: '/dashboard/comercial/visitas',
+    title: 'Visitas',
+    description: 'Agendamentos e visitas realizadas',
+    icon: Footprints,
+    color: 'bg-amber-100 text-amber-600',
+  },
+];
+
 const kpiData = [
   {
     icon: Target,
@@ -27,13 +53,13 @@ const kpiData = [
     value: 'R$ 232.296.998,00',
     subLabel: 'VP',
     subValue: '129 unidades no total',
-    color: 'text-[#8B2356]',
-    bgColor: 'bg-[#8B2356]/10',
+    color: 'text-[#61072E]',
+    bgColor: 'bg-[#61072E]/10',
   },
   {
     icon: Warehouse,
     label: 'VGV em Estoque',
-    value: 'R$ 85.00.00',
+    value: 'R$ 0,00',
     subLabel: 'Sienge API',
     subValue: '',
     color: 'text-amber-600',
@@ -98,7 +124,7 @@ const citiesData = [
 function KPICard({ kpi }: { kpi: typeof kpiData[0] }) {
   const Icon = kpi.icon;
   return (
-    <Card className="bg-card border-border hover:border-[#8B2356]/30 transition-colors">
+    <Card className="bg-card border-border hover:border-[#61072E]/30 transition-colors">
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-start gap-2 sm:gap-3">
           <div className={`p-2 rounded-lg ${kpi.bgColor} shrink-0`}>
@@ -126,7 +152,7 @@ function ProjectRow({ project, isTotal = false }: { project: any, isTotal?: bool
       <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
         {isTotal ? <span className="font-semibold">{project.name}</span> : (
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#8B2356]" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[#61072E]" />
             <span className="truncate max-w-[80px] sm:max-w-[120px]">{project.name}</span>
           </div>
         )}
@@ -156,7 +182,7 @@ function CitySection({ city, isExpanded, onToggle }: { city: typeof citiesData[0
           <div className="flex items-center gap-2">
             {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
             <span className="font-semibold text-sm sm:text-base">{city.name}</span>
-            <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground font-medium">{city.projectsCount} projetos</span>
+            <Badge variant="secondary" className="text-[10px] sm:text-xs">{city.projectsCount} projetos</Badge>
           </div>
         </td>
       </tr>
@@ -203,7 +229,7 @@ export default function ComercialPage() {
             <span className="hidden sm:inline">Importar Planilha</span>
             <span className="sm:hidden">Importar</span>
           </Button>
-          <Button size="sm" className="bg-[#8B2356] hover:bg-[#8B2356]/90 text-white text-xs sm:text-sm h-8 sm:h-9">
+          <Button size="sm" className="bg-[#61072E] hover:bg-[#61072E]/90 text-white text-xs sm:text-sm h-8 sm:h-9">
             <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
             <span className="hidden sm:inline">Novo Lançamento</span>
             <span className="sm:hidden">Novo</span>
@@ -218,13 +244,38 @@ export default function ComercialPage() {
         ))}
       </div>
 
+      {/* Menu Items */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {menuItems.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={index}
+              href={item.href}
+              className="group bg-card border border-border rounded-xl p-4 sm:p-6 hover:shadow-lg hover:border-[#61072E]/30 transition-all"
+            >
+              <div className="flex items-start gap-4">
+                <div className={`p-3 rounded-xl ${item.color} group-hover:scale-110 transition-transform`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-base sm:text-lg mb-1">{item.title}</h3>
+                  <p className="text-muted-foreground text-xs sm:text-sm">{item.description}</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-[#61072E] group-hover:translate-x-1 transition-all" />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
       {/* Meta de Vendas Section */}
       <Card className="bg-card border-border overflow-hidden">
         <div className="p-3 sm:p-4 lg:p-6 border-b border-border">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 rounded-lg bg-[#8B2356]/10">
-                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-[#8B2356]" />
+              <div className="p-1.5 sm:p-2 rounded-lg bg-[#61072E]/10">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-[#61072E]" />
               </div>
               <div>
                 <h2 className="text-base sm:text-lg font-semibold">Meta de Vendas - Projetos Ativos</h2>
@@ -254,10 +305,10 @@ export default function ComercialPage() {
                 <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   VGV (R$)
                 </th>
-                <th colSpan={4} className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs font-medium text-[#8B2356] uppercase tracking-wider border-l border-border">
+                <th colSpan={4} className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs font-medium text-[#61072E] uppercase tracking-wider border-l border-border">
                   1º TRI
                 </th>
-                <th colSpan={4} className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs font-medium text-[#8B2356] uppercase tracking-wider border-l border-border">
+                <th colSpan={4} className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs font-medium text-[#61072E] uppercase tracking-wider border-l border-border">
                   2º TRI
                 </th>
               </tr>

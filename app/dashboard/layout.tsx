@@ -1,40 +1,24 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { Header } from '@/components/layout/Header';
-import { MobileHeader } from '@/components/layout/MobileHeader';
+import { MarsalaSidebar } from '@/components/layout/MarsalaSidebar';
 import { FiltersProvider } from '@/lib/filters-context';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { useMobileMenu } from '@/hooks/use-mobile-menu';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { isOpen, open, close } = useMobileMenu();
-
   return (
     <ProtectedRoute>
       <FiltersProvider>
-        <div className="flex min-h-screen bg-background">
-          {/* Sidebar - Fixa na lateral esquerda */}
-          <Sidebar isOpen={isOpen} onClose={close} />
+        <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row font-sans">
+          {/* Sidebar Marsala - Fixa na lateral esquerda */}
+          <MarsalaSidebar />
 
-          {/* Conteúdo principal - com margem para a sidebar no desktop */}
-          <div className="flex-1 min-w-0 lg:ml-64">
-            {/* Header Mobile - só aparece em telas pequenas */}
-            <div className="lg:hidden">
-              <MobileHeader onMenuClick={open} />
-            </div>
-            
-            {/* Header Desktop - só aparece em telas grandes */}
-            <div className="hidden lg:block">
-              <Header />
-            </div>
-            
-            {/* Main content - responsivo */}
-            <main className="p-3 sm:p-4 lg:p-6">
+          {/* Main Content - com margem para a sidebar no desktop */}
+          <main className="flex-1 overflow-y-auto p-4 pt-20 lg:pt-8 lg:p-8 lg:ml-64">
+            <div className="max-w-6xl mx-auto">
               {children}
-            </main>
-          </div>
+            </div>
+          </main>
         </div>
       </FiltersProvider>
     </ProtectedRoute>
