@@ -9,14 +9,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  webpack: (config, { isServer }) => {
-    // Ignora a pasta src/ no build
-    config.module.rules.push({
-      test: /src[\\/]/,
-      use: 'ignore-loader',
-    });
-    return config;
-  },
   async headers() {
     return [
       {
