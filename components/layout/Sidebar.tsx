@@ -86,13 +86,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         />
       )}
       
-      {/* Sidebar / Drawer */}
+      {/* Sidebar / Drawer - Fixa na lateral esquerda */}
       <aside 
         className={`
           bg-card border-r border-border flex flex-col h-screen
           fixed left-0 top-0 z-50 w-[280px]
           transform transition-transform duration-300 ease-in-out
-          lg:translate-x-0 lg:w-64 lg:static lg:z-auto
+          lg:translate-x-0 lg:w-64 lg:fixed lg:z-40
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >

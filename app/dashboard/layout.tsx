@@ -15,16 +15,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <ProtectedRoute>
       <FiltersProvider>
         <div className="flex min-h-screen bg-background">
-          {/* Sidebar - Drawer no mobile, fixa no desktop */}
+          {/* Sidebar - Fixa na lateral esquerda */}
           <Sidebar isOpen={isOpen} onClose={close} />
 
-          {/* Conteúdo principal */}
-          <div className="flex-1 lg:ml-0 min-w-0">
-            {/* Header Mobile */}
-            <MobileHeader onMenuClick={open} />
+          {/* Conteúdo principal - com margem para a sidebar no desktop */}
+          <div className="flex-1 min-w-0 lg:ml-64">
+            {/* Header Mobile - só aparece em telas pequenas */}
+            <div className="lg:hidden">
+              <MobileHeader onMenuClick={open} />
+            </div>
             
-            {/* Header Desktop */}
-            <Header />
+            {/* Header Desktop - só aparece em telas grandes */}
+            <div className="hidden lg:block">
+              <Header />
+            </div>
             
             {/* Main content - responsivo */}
             <main className="p-3 sm:p-4 lg:p-6">

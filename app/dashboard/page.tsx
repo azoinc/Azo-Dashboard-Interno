@@ -36,8 +36,8 @@ export default function DashboardHomePage() {
 
   // Master of Universe vê os dois cards
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <div className="text-center mb-8 sm:mb-12">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="text-center mb-8 sm:mb-12 max-w-4xl mx-auto">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           Selecione o Dashboard
         </h1>
