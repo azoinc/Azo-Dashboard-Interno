@@ -2,16 +2,24 @@ import pg from 'pg';
 
 const { Pool } = pg;
 
-const pool = new Pool({
-  host: process.env.SP_HOST,
-  database: "postgres",
-  user: process.env.SP_USER,
-  password: process.env.SP_PS, 
-  port: Number(process.env.SP_PORT) || 6543,
-  ssl: {
-    rejectUnauthorized: false
+let _pool: pg.Pool | null = null;
+
+function getPool(): pg.Pool {
+  if (!_pool) {
+    _pool = new Pool({
+      host: process.env.SP_HOST,
+      database: process.env.SP_DB || 'postgres',
+      user: process.env.SP_USER,
+      password: process.env.SP_PS,
+      port: Number(process.env.SP_PORT) || 6543,
+      ssl: { rejectUnauthorized: false },
+      max: 3,
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 5000,
+    });
   }
-});
+  return _pool;
+}
 
 export default async function handler(req: any, res: any) {
   if (req.method === 'OPTIONS') {
@@ -91,7 +99,7 @@ export default async function handler(req: any, res: any) {
     query += limit ? ` LIMIT $${paramIndex++}` : ` LIMIT 50000`;
     if (limit) values.push(limit);
 
-    const result = await pool.query(query, values);
+    const result = await getPool().query(query, values);
     res.status(200).json({ data: result.rows, error: null });
   } catch (error: any) {
     console.error('Database query error:', error);
