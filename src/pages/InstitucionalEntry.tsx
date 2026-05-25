@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { INSTITUCIONAL_CATEGORIES, ExpenseCategory, ALL_PROJECTS, PROJECTS_BY_CITY, Project, City, Transaction } from '../types';
 import { formatCurrency, MONTHS } from '../utils';
 import { PlusCircle, Edit2, Check, X, Upload, Settings } from 'lucide-react';
-import * as xlsx from 'xlsx';
 import { BudgetModal } from '../components/BudgetModal';
 
 export default function InstitucionalEntry() {
@@ -128,88 +127,8 @@ export default function InstitucionalEntry() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      const buffer = await file.arrayBuffer();
-      const workbook = xlsx.read(buffer, { type: 'array' });
-      
-      const newTransactions: Omit<Transaction, 'id'>[] = [];
-
-      for (const sheetName of workbook.SheetNames) {
-        const project = matchProject(sheetName);
-        if (!project) continue;
-
-        const sheet = workbook.Sheets[sheetName];
-        const rows = xlsx.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
-        
-        let dateColumns: { colIndex: number, year: number, month: number }[] = [];
-        let headerRowIndex = -1;
-
-        for (let i = 0; i < Math.min(rows.length, 20); i++) {
-          const row = rows[i];
-          if (!row) continue;
-          
-          const tempDateCols = [];
-          for (let j = 0; j < row.length; j++) {
-            const parsed = parseHeaderDate(row[j]);
-            if (parsed) {
-              tempDateCols.push({ colIndex: j, ...parsed });
-            }
-          }
-          
-          if (tempDateCols.length > 0) {
-            headerRowIndex = i;
-            dateColumns = tempDateCols;
-            break;
-          }
-        }
-
-        if (headerRowIndex === -1 || dateColumns.length === 0) continue;
-
-        for (let i = headerRowIndex + 1; i < rows.length; i++) {
-          const row = rows[i];
-          if (!row || row.length === 0) continue;
-
-          let categoryMatch = null;
-          let description = '';
-          for (let j = 0; j < Math.min(row.length, 5); j++) {
-            const cellValue = String(row[j] || '');
-            const match = matchCategory(cellValue);
-            if (match) {
-              categoryMatch = match;
-              description = cellValue.length > match.category.length + 3 ? cellValue : String(row[j+1] || match.category);
-              break;
-            }
-          }
-
-          if (!categoryMatch) continue;
-
-          for (const dateCol of dateColumns) {
-            const amount = parseCurrency(row[dateCol.colIndex]);
-            if (amount > 0) {
-              newTransactions.push({
-                date: `${dateCol.year}-${dateCol.month.toString().padStart(2, '0')}-01`,
-                city: getCityForProject(project),
-                project,
-                type: categoryMatch.type,
-                category: categoryMatch.category,
-                amount,
-                description: description.substring(0, 100)
-              });
-            }
-          }
-        }
-      }
-
-      if (newTransactions.length > 0) {
-        addTransactions(newTransactions);
-        alert(`${newTransactions.length} lançamentos importados com sucesso de todas as abas!`);
-      } else {
-        alert('Nenhum lançamento válido encontrado no arquivo.');
-      }
-    } catch (error) {
-      console.error('Error parsing file:', error);
-      alert('Erro ao ler o arquivo. Certifique-se de que é um arquivo Excel válido.');
-    }
+    // XLSX import desabilitado - usar CSV manualmente
+    alert('Importação de Excel desabilitada. Use a sincronização com Supabase ou adicione manualmente.');
     
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -237,7 +156,7 @@ export default function InstitucionalEntry() {
           )}
           <input
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv"
             onChange={handleFileUpload}
             className="hidden"
             ref={fileInputRef}

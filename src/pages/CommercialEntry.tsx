@@ -1,6 +1,5 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { PlusCircle, Trash2, Upload, Database, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
-import * as xlsx from 'xlsx';
 import { useExpense } from '../context/ExpenseContext';
 import { MONTHS, formatCurrency, matchProject, getCityForProject } from '../utils';
 import { Project, SaleRecord, PipelineRecord, City, PROJECTS_BY_CITY, CommercialRecord } from '../types';
@@ -56,42 +55,8 @@ export default function CommercialEntry() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const fileDate = new Date(file.lastModified);
-    const now = new Date();
-    const safeDate = fileDate > now ? now : fileDate;
-
-    try {
-      const buffer = await file.arrayBuffer();
-      const workbook = xlsx.read(buffer, { type: 'array' });
-      
-      let totalImported = 0;
-
-      for (const sheetName of workbook.SheetNames) {
-        const sheet = workbook.Sheets[sheetName];
-        const csvText = xlsx.utils.sheet_to_csv(sheet, { FS: ';' });
-        
-        let year = safeDate.getFullYear();
-        let month = safeDate.getMonth() + 1;
-        
-        const parsedDate = parseSheetName(sheetName);
-        if (parsedDate) {
-          year = parsedDate.year;
-          month = parsedDate.month;
-        }
-        
-        const importedCount = parseCSV(csvText, year, month);
-        totalImported += importedCount;
-      }
-
-      if (totalImported > 0) {
-        alert(`${totalImported} lançamentos importados com sucesso de todas as abas!`);
-      } else {
-        alert('Nenhum lançamento válido encontrado no arquivo.');
-      }
-    } catch (error) {
-      console.error('Error parsing file:', error);
-      alert('Erro ao ler o arquivo. Certifique-se de que é um arquivo Excel ou CSV válido.');
-    }
+    // XLSX import desabilitado - usar CSV manualmente
+    alert('Importação de Excel desabilitada. Use a sincronização com Supabase ou adicione manualmente.');
     
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -343,7 +308,7 @@ export default function CommercialEntry() {
           </button>
           <input
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv"
             ref={fileInputRef}
             onChange={handleFileUpload}
             className="hidden"
