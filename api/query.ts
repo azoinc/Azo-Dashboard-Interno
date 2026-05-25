@@ -1,24 +1,18 @@
 import pg from 'pg';
 
-const { Pool } = pg;
+const { Client } = pg;
 
-let _pool: pg.Pool | null = null;
-
-function getPool(): pg.Pool {
-  if (!_pool) {
-    _pool = new Pool({
-      host: process.env.SP_HOST,
-      database: process.env.SP_DB || 'postgres',
-      user: process.env.SP_USER,
-      password: process.env.SP_PS,
-      port: Number(process.env.SP_PORT) || 6543,
-      ssl: { rejectUnauthorized: false },
-      max: 3,
-      idleTimeoutMillis: 10000,
-      connectionTimeoutMillis: 5000,
-    });
-  }
-  return _pool;
+function newClient(): pg.Client {
+  return new Client({
+    host: process.env.SP_HOST,
+    database: process.env.SP_DB || 'postgres',
+    user: process.env.SP_USER,
+    password: process.env.SP_PS,
+    port: Number(process.env.SP_PORT) || 6543,
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 8000,
+    query_timeout: 25000,
+  });
 }
 
 export default async function handler(req: any, res: any) {
@@ -99,8 +93,14 @@ export default async function handler(req: any, res: any) {
     query += limit ? ` LIMIT $${paramIndex++}` : ` LIMIT 50000`;
     if (limit) values.push(limit);
 
-    const result = await getPool().query(query, values);
-    res.status(200).json({ data: result.rows, error: null });
+    const client = newClient();
+    await client.connect();
+    try {
+      const result = await client.query(query, values);
+      res.status(200).json({ data: result.rows, error: null });
+    } finally {
+      await client.end();
+    }
   } catch (error: any) {
     console.error('Database query error:', error);
     res.status(500).json({ data: null, error: { message: error.message } });

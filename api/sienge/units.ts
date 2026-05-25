@@ -1,13 +1,19 @@
-import { siengeGet, isConfigured } from '../_lib/sienge';
+const subdomain = process.env.SIENGE_SUBDOMAIN || '';
+const username = process.env.SIENGE_USERNAME || '';
+const password = process.env.SIENGE_PASSWORD || '';
+const base = `https://api.sienge.com.br/${subdomain}/api/v1`;
+const auth = () => `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
 
 export default async function handler(req: any, res: any) {
-  if (!isConfigured()) return res.status(200).json({ total: 0, disponiveis: 0, vgvEstoque: 0 });
+  if (!subdomain || !username) return res.status(200).json({ total: 0, disponiveis: 0, vgvEstoque: 0 });
 
   const enterpriseId = req.query?.enterpriseId;
   if (!enterpriseId) return res.status(400).json({ error: 'enterpriseId obrigatório' });
 
   try {
-    const data = await siengeGet(`enterprises/${enterpriseId}/units`);
+    const r = await fetch(`${base}/enterprises/${enterpriseId}/units`, { headers: { Authorization: auth() } });
+    if (!r.ok) throw new Error(`Sienge ${r.status}`);
+    const data = await r.json();
     const units = data.results || [];
 
     const disponiveisUnits = units.filter((u: any) => {
