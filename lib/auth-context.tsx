@@ -51,14 +51,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (fbUser) {
         try {
           console.log('AuthProvider: Buscando dados do usuário no Firestore...');
-          const userDoc = await getDoc(doc(db, 'users', fbUser.uid));
+          console.log('AuthProvider: UID do usuário logado:', fbUser.uid);
+          console.log('AuthProvider: Email do usuário logado:', fbUser.email);
+          
+          // Tenta buscar pelo UID primeiro
+          let userDoc = await getDoc(doc(db, 'users', fbUser.uid));
+          
+          // Se não encontrar pelo UID, tenta buscar pelo email
+          if (!userDoc.exists() && fbUser.email) {
+            console.log('AuthProvider: Não encontrado pelo UID, tentando buscar pelo email...');
+            const { collection, query, where, getDocs } = await import('firebase/firestore');
+            const usersRef = collection(db, 'users');
+            const q = query(usersRef, where('email', '==', fbUser.email));
+            const querySnapshot = await getDocs(q);
+            
+            if (!querySnapshot.empty) {
+              const docByEmail = querySnapshot.docs[0];
+              console.log('AuthProvider: Encontrado pelo email, UID no Firestore:', docByEmail.id);
+              userDoc = docByEmail;
+            }
+          }
+          
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
-            console.log('AuthProvider: Dados do usuário encontrados:', userData.role);
+            console.log('AuthProvider: Dados do usuário encontrados, role:', userData.role);
             setUser(userData);
           } else {
-            console.warn('AuthProvider: Usuário autenticado mas sem registro no Firestore');
-            setUser(null);
+            // Usuário existe no Auth mas não no Firestore - cria documento automaticamente
+            console.warn('AuthProvider: Usuário sem registro no Firestore, criando documento...');
+            const newUser: User = {
+              uid: fbUser.uid,
+              email: fbUser.email || '',
+              displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'Usuário',
+              role: 'admin', // Role padrão, pode ser ajustado depois
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              ativo: true,
+            };
+            await setDoc(doc(db, 'users', fbUser.uid), newUser);
+            console.log('AuthProvider: Documento criado com sucesso, role:', newUser.role);
+            setUser(newUser);
           }
         } catch (error) {
           console.error('AuthProvider: Erro ao carregar usuário:', error);
