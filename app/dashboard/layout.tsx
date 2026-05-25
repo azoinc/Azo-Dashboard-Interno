@@ -3,12 +3,12 @@
 import { ReactNode } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
-import { AuthProvider } from '@/lib/auth-context';
 import { FiltersProvider } from '@/lib/filters-context';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <AuthProvider>
+    <ProtectedRoute>
       <FiltersProvider>
         <div className="flex min-h-screen bg-background">
           {/* Sidebar fixa */}
@@ -21,6 +21,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </FiltersProvider>
-    </AuthProvider>
+    </ProtectedRoute>
   );
 }

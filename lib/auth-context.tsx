@@ -42,20 +42,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AuthProvider: Iniciando listener de auth...');
+    
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      console.log('AuthProvider: Estado de auth mudou:', fbUser ? `Usuário logado: ${fbUser.email}` : 'Sem usuário');
       setFirebaseUser(fbUser);
       
       if (fbUser) {
         try {
+          console.log('AuthProvider: Buscando dados do usuário no Firestore...');
           const userDoc = await getDoc(doc(db, 'users', fbUser.uid));
           if (userDoc.exists()) {
-            setUser(userDoc.data() as User);
+            const userData = userDoc.data() as User;
+            console.log('AuthProvider: Dados do usuário encontrados:', userData.role);
+            setUser(userData);
           } else {
-            // Usuário autenticado mas sem registro no Firestore
+            console.warn('AuthProvider: Usuário autenticado mas sem registro no Firestore');
             setUser(null);
           }
         } catch (error) {
-          console.error('Erro ao carregar usuário:', error);
+          console.error('AuthProvider: Erro ao carregar usuário:', error);
           setUser(null);
         }
       } else {
@@ -63,13 +69,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       setLoading(false);
+    }, (error) => {
+      console.error('AuthProvider: Erro no onAuthStateChanged:', error);
+      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log('AuthProvider: Limpando listener de auth');
+      unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    console.log('AuthProvider: Tentando login com:', email);
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      console.log('AuthProvider: Login bem-sucedido:', result.user.email);
+    } catch (error) {
+      console.error('AuthProvider: Erro no login:', error);
+      throw error;
+    }
   };
 
   const signOut = async () => {

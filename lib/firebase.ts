@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,8 +11,33 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// Verifica se todas as variáveis estão configuradas
+const missingVars = Object.entries(firebaseConfig)
+  .filter(([_, value]) => !value)
+  .map(([key]) => key);
+
+if (missingVars.length > 0 && typeof window !== 'undefined') {
+  console.error('Firebase: Variáveis de ambiente faltando:', missingVars);
+}
+
+let app;
+try {
+  app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  if (typeof window !== 'undefined') {
+    console.log('Firebase: App inicializado com sucesso');
+  }
+} catch (error) {
+  console.error('Firebase: Erro ao inicializar app:', error);
+  throw error;
+}
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Log para debug (apenas no client)
+if (typeof window !== 'undefined') {
+  console.log('Firebase Auth:', auth ? 'OK' : 'FALHOU');
+  console.log('Firebase Firestore:', db ? 'OK' : 'FALHOU');
+}
+
 export default app;

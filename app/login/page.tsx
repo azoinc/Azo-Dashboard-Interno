@@ -20,8 +20,25 @@ export default function LoginPage() {
     try {
       await signIn(email, password);
       router.push('/dashboard');
-    } catch (err) {
-      setError('E-mail ou senha inválidos');
+    } catch (err: any) {
+      console.error('Erro de login:', err);
+      console.error('Código do erro:', err?.code);
+      console.error('Mensagem do erro:', err?.message);
+      
+      // Mapeia códigos de erro do Firebase para mensagens em português
+      const errorMessages: Record<string, string> = {
+        'auth/invalid-email': 'E-mail inválido',
+        'auth/user-disabled': 'Usuário desativado',
+        'auth/user-not-found': 'Usuário não encontrado',
+        'auth/wrong-password': 'Senha incorreta',
+        'auth/invalid-credential': 'Credenciais inválidas',
+        'auth/too-many-requests': 'Muitas tentativas. Tente mais tarde',
+        'auth/network-request-failed': 'Erro de conexão. Verifique sua internet',
+        'auth/invalid-api-key': 'Chave de API inválida - verifique as configurações',
+        'auth/app-not-authorized': 'App não autorizado',
+      };
+      
+      setError(errorMessages[err?.code] || `Erro: ${err?.message || 'E-mail ou senha inválidos'}`);
     } finally {
       setLoading(false);
     }
