@@ -11,10 +11,10 @@ import Link from 'next/link';
 
 // Mock data para Interno Mkt
 const kpiData = [
-  { icon: Users, label: 'Total de Leads', value: '2.847', trend: '+12%', trendUp: true },
-  { icon: Target, label: 'Taxa de Conversão', value: '24.5%', trend: '+3.2%', trendUp: true },
-  { icon: DollarSign, label: 'Custo por Lead', value: 'R$ 45,80', trend: '-8%', trendUp: true },
-  { icon: Activity, label: 'Engajamento', value: '68%', trend: '-2%', trendUp: false },
+  { icon: Users, label: 'Total de Leads', value: '2.847', trend: '+12%', trendUp: true, iconColor: 'text-indigo-600', iconBg: 'bg-indigo-50' },
+  { icon: Target, label: 'Taxa de Conversão', value: '24.5%', trend: '+3.2%', trendUp: true, iconColor: 'text-[#61072E]', iconBg: 'bg-[#61072E]/10' },
+  { icon: DollarSign, label: 'Custo por Lead', value: 'R$ 45,80', trend: '-8%', trendUp: true, iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50' },
+  { icon: Activity, label: 'Engajamento', value: '68%', trend: '-2%', trendUp: false, iconColor: 'text-rose-600', iconBg: 'bg-rose-50' },
 ];
 
 const equipeData = [
@@ -33,20 +33,20 @@ const campanhasData = [
 function KPICard({ kpi }: { kpi: typeof kpiData[0] }) {
   const Icon = kpi.icon;
   return (
-    <Card className="bg-card border-border">
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex items-start justify-between">
+    <Card className="bg-white border border-slate-100 hover:border-[#61072E]/20 hover:shadow-md transition-all duration-300">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-violet-100">
-              <Icon className="w-5 h-5 text-violet-600" />
+            <div className={`p-2.5 rounded-xl ${kpi.iconBg} shrink-0`}>
+              <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${kpi.iconColor}`} />
             </div>
-            <div>
-              <p className="text-xs sm:text-sm text-muted-foreground">{kpi.label}</p>
-              <p className="text-lg sm:text-2xl font-bold">{kpi.value}</p>
+            <div className="text-left">
+              <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{kpi.label}</p>
+              <p className="text-sm sm:text-lg font-bold text-slate-800 mt-0.5">{kpi.value}</p>
             </div>
           </div>
-          <div className={`flex items-center gap-1 text-xs sm:text-sm ${kpi.trendUp ? 'text-emerald-600' : 'text-rose-500'}`}>
-            {kpi.trendUp ? <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" /> : <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />}
+          <div className={`flex items-center gap-1 text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full ${kpi.trendUp ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+            {kpi.trendUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
             {kpi.trend}
           </div>
         </div>

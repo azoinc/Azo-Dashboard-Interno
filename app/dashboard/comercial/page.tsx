@@ -53,8 +53,8 @@ const kpiData = [
     value: 'R$ 232.296.998,00',
     subLabel: 'VP',
     subValue: '129 unidades no total',
-    color: 'text-[#61072E]',
-    bgColor: 'bg-[#61072E]/10',
+    iconColor: 'text-[#61072E]',
+    iconBg: 'bg-[#61072E]/10',
   },
   {
     icon: Warehouse,
@@ -62,8 +62,8 @@ const kpiData = [
     value: 'R$ 0,00',
     subLabel: 'Sienge API',
     subValue: '',
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-100',
+    iconColor: 'text-amber-600',
+    iconBg: 'bg-amber-50',
   },
   {
     icon: TrendingUp,
@@ -71,8 +71,8 @@ const kpiData = [
     value: 'R$ 85.389.157,15',
     subLabel: 'VP',
     subValue: '36,8% da meta de VGV',
-    color: 'text-emerald-600',
-    bgColor: 'bg-emerald-100',
+    iconColor: 'text-emerald-600',
+    iconBg: 'bg-emerald-50',
   },
   {
     icon: Home,
@@ -80,8 +80,8 @@ const kpiData = [
     value: '44 / 129',
     subLabel: '',
     subValue: '',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
+    iconColor: 'text-blue-600',
+    iconBg: 'bg-blue-50',
   },
   {
     icon: Zap,
@@ -89,8 +89,8 @@ const kpiData = [
     value: '72%',
     subLabel: '',
     subValue: 'Velocidade de Vendas sobre Oferta',
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-100',
+    iconColor: 'text-orange-600',
+    iconBg: 'bg-orange-50',
   },
 ];
 
@@ -124,20 +124,17 @@ const citiesData = [
 function KPICard({ kpi }: { kpi: typeof kpiData[0] }) {
   const Icon = kpi.icon;
   return (
-    <Card className="bg-card border-border hover:border-[#61072E]/30 transition-colors">
+    <Card className="bg-white border border-slate-100 hover:border-[#61072E]/20 hover:shadow-md transition-all duration-300">
       <CardContent className="p-3 sm:p-4">
-        <div className="flex items-start gap-2 sm:gap-3">
-          <div className={`p-2 rounded-lg ${kpi.bgColor} shrink-0`}>
-            <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${kpi.color}`} />
+        <div className="flex items-center gap-3">
+          <div className={`p-2.5 rounded-xl ${kpi.iconBg} shrink-0`}>
+            <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${kpi.iconColor}`} />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs sm:text-sm text-muted-foreground truncate">{kpi.label}</p>
-            <p className="text-sm sm:text-lg lg:text-xl font-bold text-foreground mt-0.5 truncate">{kpi.value}</p>
-            {kpi.subLabel && (
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{kpi.subLabel}</p>
-            )}
+          <div className="min-w-0 flex-1 text-left">
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">{kpi.label}</p>
+            <p className="text-sm sm:text-lg font-bold text-slate-800 mt-0.5 truncate">{kpi.value}</p>
             {kpi.subValue && (
-              <p className="text-[10px] sm:text-xs text-muted-foreground/70 truncate">{kpi.subValue}</p>
+              <p className="text-[10px] text-slate-400 truncate mt-0.5">{kpi.subValue}</p>
             )}
           </div>
         </div>

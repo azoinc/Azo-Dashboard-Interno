@@ -8,18 +8,18 @@ import { TrendingDown, Package, TrendingUp, Target, ShoppingCart, Megaphone, Sto
 
 // Mock data based on the screenshot
 const kpiRow1 = [
-  { icon: Package, label: 'VGV DO PRODUTO', value: 'R$ 232.296.998,00', bgColor: 'bg-[#8B2356]', textColor: 'text-white' },
-  { icon: Box, label: 'VGV EM ESTOQUE', value: 'R$ 0,00', bgColor: 'bg-[#8B2356]', textColor: 'text-white' },
-  { icon: TrendingUp, label: 'VGV REALIZADO', value: 'R$ 11.000.844,54', bgColor: 'bg-[#8B2356]', textColor: 'text-white' },
-  { icon: Target, label: 'META DE VENDAS', value: '61 unid.', bgColor: 'bg-[#8B2356]', textColor: 'text-white' },
-  { icon: ShoppingCart, label: 'VENDAS REALIZADAS', value: '8 unid.', bgColor: 'bg-[#8B2356]', textColor: 'text-white' },
+  { icon: Package, label: 'VGV DO PRODUTO', value: 'R$ 232.296.998,00', iconColor: 'text-[#61072E]', iconBg: 'bg-[#61072E]/10' },
+  { icon: Box, label: 'VGV EM ESTOQUE', value: 'R$ 0,00', iconColor: 'text-amber-600', iconBg: 'bg-amber-50' },
+  { icon: TrendingUp, label: 'VGV REALIZADO', value: 'R$ 11.000.844,54', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50' },
+  { icon: Target, label: 'META DE VENDAS', value: '61 unid.', iconColor: 'text-[#61072E]', iconBg: 'bg-[#61072E]/10' },
+  { icon: ShoppingCart, label: 'VENDAS REALIZADAS', value: '8 unid.', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50' },
 ];
 
 const kpiRow2 = [
-  { icon: Megaphone, label: 'INVESTIMENTO MKT', value: 'R$ 505.000,00', bgColor: 'bg-slate-800', textColor: 'text-white' },
-  { icon: Store, label: 'INVESTIMENTO STAND', value: 'R$ 0,00', bgColor: 'bg-slate-800', textColor: 'text-white' },
-  { icon: Package, label: 'INVESTIMENTO PRODUTO', value: 'R$ 0,00', bgColor: 'bg-slate-800', textColor: 'text-white' },
-  { icon: Box, label: 'ESTOQUE DE UNID.', value: '129 unid.', bgColor: 'bg-slate-800', textColor: 'text-white' },
+  { icon: Megaphone, label: 'INVESTIMENTO MKT', value: 'R$ 505.000,00', iconColor: 'text-blue-600', iconBg: 'bg-blue-50' },
+  { icon: Store, label: 'INVESTIMENTO STAND', value: 'R$ 0,00', iconColor: 'text-slate-600', iconBg: 'bg-slate-50' },
+  { icon: Package, label: 'INVESTIMENTO PRODUTO', value: 'R$ 0,00', iconColor: 'text-[#61072E]', iconBg: 'bg-[#61072E]/10' },
+  { icon: Box, label: 'ESTOQUE DE UNID.', value: '129 unid.', iconColor: 'text-indigo-600', iconBg: 'bg-indigo-50' },
 ];
 
 const origemInvestimentoData = [
@@ -60,14 +60,16 @@ const planejadoRealizadoData = [
 function KPICard({ kpi }: { kpi: typeof kpiRow1[0] }) {
   const Icon = kpi.icon;
   return (
-    <Card className={`${kpi.bgColor} border-0`}>
-      <CardContent className="p-2 sm:p-3">
-        <div className="flex flex-col items-center text-center">
-          <div className="flex items-center gap-1.5 mb-1">
-            <Icon className={`w-3 h-3 sm:w-4 sm:h-4 ${kpi.textColor}`} />
-            <p className={`text-[10px] sm:text-xs font-medium ${kpi.textColor} uppercase tracking-wider`}>{kpi.label}</p>
+    <Card className="bg-white border border-slate-100 hover:border-[#61072E]/20 hover:shadow-md transition-all duration-300">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-center gap-3">
+          <div className={`p-2.5 rounded-xl ${kpi.iconBg} shrink-0`}>
+            <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${kpi.iconColor}`} />
           </div>
-          <p className={`text-xs sm:text-sm lg:text-base font-bold ${kpi.textColor}`}>{kpi.value}</p>
+          <div className="min-w-0 flex-1 text-left">
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">{kpi.label}</p>
+            <p className="text-sm sm:text-lg font-bold text-slate-800 mt-0.5 truncate">{kpi.value}</p>
+          </div>
         </div>
       </CardContent>
     </Card>
