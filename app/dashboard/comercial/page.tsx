@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   Target, 
   Warehouse, 
@@ -157,7 +156,7 @@ function CitySection({ city, isExpanded, onToggle }: { city: typeof citiesData[0
           <div className="flex items-center gap-2">
             {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
             <span className="font-semibold text-sm sm:text-base">{city.name}</span>
-            <Badge variant="secondary" className="text-[10px] sm:text-xs">{city.projectsCount} projetos</Badge>
+            <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground font-medium">{city.projectsCount} projetos</span>
           </div>
         </td>
       </tr>
